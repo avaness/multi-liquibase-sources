@@ -1,12 +1,13 @@
-changeSet:
-  id: sqlFile-example
-  author: liquibase-docs
-  databaseChangeLog:
-    - changeset:
-        dbms: h2, mysql
-        encoding: utf8
-        endDelimiter: \nGO
-        path: schema.sql
-        relativeToChangelogFile: true
-        splitStatements: true
-        stripComments: true
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: liquibase-docs
+      changes:
+        - sqlFile:
+            dbms: h2, mysql
+            encoding: utf8
+            endDelimiter: \nGO
+            path: ./schema.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+            stripComments: false

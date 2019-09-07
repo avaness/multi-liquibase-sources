@@ -3,15 +3,17 @@ package vikram.sample;
 import javax.sql.DataSource;
 import liquibase.integration.spring.SpringLiquibase;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import vikram.sample.SpringBootMain.VikramCustomDatasourceConfig;
+import vikram.sample.SpringBootMain.DatasourceConfig;
 
 @SpringBootApplication
-@EnableConfigurationProperties(VikramCustomDatasourceConfig.class)
+@EnableConfigurationProperties({DatasourceConfig.class})
 public class SpringBootMain {
 
   public static void main(String[] args) {
@@ -19,26 +21,46 @@ public class SpringBootMain {
   }
 
   @Bean(name = "liquibase")
-  public SpringLiquibase primaryLiquibase(DataSource dataSource) {
-    return applyLiquibase(dataSource);
+  public SpringLiquibase setupMaster(DataSource dataSource) {
+    return applyLiquibase(dataSource, "classpath:liquibase/update-master.yaml");
   }
 
-  @Bean(name="liquibase2")
-  public SpringLiquibase configure2ndDatasource(VikramCustomDatasourceConfig cfg) {
+  @Bean(name="setup-new-client")
+  @Autowired
+  public SpringLiquibase configureNewClient(@Qualifier("new-client-datasource") DatasourceConfig cfg) {
     BasicDataSource ds = createDatasource(cfg);
-    return applyLiquibase(ds);
+    return applyLiquibase(ds, "classpath:liquibase/setup-new-client.yaml");
   }
 
-  private SpringLiquibase applyLiquibase(DataSource dataSource) {
+  @Bean(name="update-existing-client")
+  @Autowired
+  public SpringLiquibase updateExistingClient(@Qualifier("existing-client-datasource") DatasourceConfig cfg) {
+    BasicDataSource ds = createDatasource(cfg);
+    return applyLiquibase(ds, "classpath:liquibase/update-existing-client.yaml");
+  }
+
+  private SpringLiquibase applyLiquibase(DataSource dataSource, String liquibaseModel) {
     SpringLiquibase springLiquibase = new SpringLiquibase();
     springLiquibase.setDataSource(dataSource);
-    springLiquibase.setChangeLog("classpath:liquibase/changelog.yaml");
-    springLiquibase.setShouldRun(true); //TODO
+    springLiquibase.setChangeLog(liquibaseModel);
+    springLiquibase.setShouldRun(true);
     return springLiquibase;
   }
 
-  @ConfigurationProperties(prefix = "vikram.custom.datasource2")
-  public static class VikramCustomDatasourceConfig {
+  @Bean(name="new-client-datasource")
+  @ConfigurationProperties(prefix="vikram.custom.new.client")
+  public DatasourceConfig newClientDatasource() {
+    return new DatasourceConfig();
+  }
+
+  @Bean(name="existing-client-datasource")
+  @ConfigurationProperties(prefix="vikram.custom.existing.client")
+  public DatasourceConfig existingClientDatasource() {
+    return new DatasourceConfig();
+  }
+
+  @ConfigurationProperties
+  public static class DatasourceConfig {
     private String url;
     private String driverClassName;
     private String username;
@@ -77,7 +99,7 @@ public class SpringBootMain {
     }
   }
 
-  private BasicDataSource createDatasource(VikramCustomDatasourceConfig cfg) {
+  private BasicDataSource createDatasource(DatasourceConfig cfg) {
     BasicDataSource ds = new BasicDataSource();
     ds.setDriverClassName(cfg.getDriverClassName());
     ds.setUrl(cfg.getUrl());

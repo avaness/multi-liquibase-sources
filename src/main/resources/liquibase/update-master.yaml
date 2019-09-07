@@ -1,13 +1,16 @@
 databaseChangeLog:
   - changeSet:
-      id: 1
-      author: liquibase-docs
+      id: master-1
+      author: Ram
       changes:
         - sqlFile:
             dbms: h2, mysql
             encoding: utf8
             endDelimiter: \nGO
-            path: ./schema.sql
+            path: ./incremental-update-master-1.sql
             relativeToChangelogFile: true
             splitStatements: true
             stripComments: false
+  - include:
+      file: update-existing-client.yaml
+      relativeToChangelogFile: true

@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: new-client-1
+      author: liquibase-docs
+      changes:
+        - sqlFile:
+            dbms: h2, mysql
+            encoding: utf8
+            endDelimiter: \nGO
+            path: ./initial-client-schema-snapshot.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+            stripComments: false
+  - include:
+      file: ./update-existing-client.yaml
+      relativeToChangelogFile: true

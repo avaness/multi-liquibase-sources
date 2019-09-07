@@ -1,5 +1,5 @@
 /*
-package vikram.sample.sources_from_vikram;
+package com.grc.riskanalysis.datasource;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -14,10 +14,14 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 
 import com.grc.common.Encryptor;
 import com.grc.riskanalysis.facade.DbConnectionFacade;
+import com.grc.riskanalysis.facade.ReportingUnitFacade;
 import com.grc.riskanalysis.vo.admin.DbConnectionVO;
+
+import liquibase.integration.spring.SpringLiquibase;
 
 public class CustomDatasource implements DataSource {
 
@@ -29,11 +33,32 @@ public class CustomDatasource implements DataSource {
 
 	@Autowired
 	private DbConnectionFacade dbFacade;
+	
+	@Autowired
+	private ReportingUnitFacade ruFacade;
 
 	public CustomDatasource() {
 
 	}
-
+	
+	
+	@Bean(name="liquibase2")
+	public SpringLiquibase configureNewClient( ) throws SQLException {
+		//final List<DbConnectionVO> dbs = dbFacade.findAll();
+		//for(DbConnectionVO)
+		BasicDataSource ds = getDS();
+	    return applyLiquibase(ds);
+	}
+	 
+	private SpringLiquibase applyLiquibase(DataSource dataSource) {
+	    SpringLiquibase springLiquibase = new SpringLiquibase();
+	    springLiquibase.setDataSource(dataSource);
+	    springLiquibase.setChangeLog("classpath:liquibase/changelog-ru.yaml");
+	    springLiquibase.setShouldRun(true); //TODO
+	    return springLiquibase;
+	}
+	
+		
 	private BasicDataSource getDS() throws SQLException {
 
 		Long tenantId = TenetContext.getTenantId();
@@ -48,7 +73,8 @@ public class CustomDatasource implements DataSource {
 			else if (tenantId != null && !datasources.containsKey(tenantId)) {
 				final DbConnectionVO conn = dbFacade.findOne(tenantId);
 				if (conn != null) {
-					addDS(conn);
+					BasicDataSource ds=addDS(conn);
+					applyLiquibase(ds);
 				}
 			}
 		}
@@ -60,7 +86,7 @@ public class CustomDatasource implements DataSource {
 		return basicDataSource;
 	}
 
-	private void addDS(final DbConnectionVO db) {
+	private BasicDataSource addDS(final DbConnectionVO db) {
 		final BasicDataSource ds = new BasicDataSource();
 		ds.setDriverClassName(db.getDriverClassName());
 		final String autRconnect = "?useSSL=false";
@@ -102,6 +128,7 @@ public class CustomDatasource implements DataSource {
 		//ds.setDefaultQueryTimeout(2400000);
 		//ds.setRemoveAbandonedTimeout(900);
 		datasources.put(db.getId(), ds);
+		return ds;
 	}
 
 	@Override

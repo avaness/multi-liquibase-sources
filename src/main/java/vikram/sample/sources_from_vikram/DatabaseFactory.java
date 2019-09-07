@@ -54,7 +54,7 @@ public class DatabaseFactory {
 	    )
 	    protected SpringLiquibase springLiquibase(@Qualifier("jDataSource") DataSource dataSource) throws Exception {
 	        SpringLiquibase springLiquibase = new SpringLiquibase();
-	        springLiquibase.setChangeLog("classpath:liquibase/changelog.yaml");
+	        springLiquibase.setChangeLog("classpath:liquibase/changelog-startup.yaml");
 	        springLiquibase.setDataSource(dataSource);
 	        springLiquibase.setShouldRun((Boolean)this.env.getProperty("database.liquibase.enabled", Boolean.class, Boolean.FALSE));
 	        return springLiquibase;

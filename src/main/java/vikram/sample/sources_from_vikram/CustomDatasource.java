@@ -54,7 +54,7 @@ public class CustomDatasource implements DataSource {
 	    SpringLiquibase springLiquibase = new SpringLiquibase();
 	    springLiquibase.setDataSource(dataSource);
 	    springLiquibase.setChangeLog("classpath:liquibase/changelog-ru.yaml");
-	    springLiquibase.setShouldRun(true); //TODO
+	    springLiquibase.setShouldRun(true);
 	    return springLiquibase;
 	}
 	
